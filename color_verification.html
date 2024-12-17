@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Color-Based Authentication</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Page styling */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #4e54c8, #8f94fb); /* Gradient background */
+            color: #ffffff;
+            text-align: center;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        /* Header styling */
+        h3 {
+            color: #ffdf6c; /* Soft yellow for contrast */
+            margin-bottom: 15px;
+            font-size: 1.8em;
+            letter-spacing: 1px;
+        }
+        
+        /* Paragraph styling */
+        p {
+            font-size: 1.1em;
+            color: #d0d0e1; /* Light gray for instructions */
+            margin-bottom: 30px;
+        }
+        
+        /* Color options container styling */
+        #colorOptions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px; /* Space between buttons */
+            margin-top: 20px;
+        }
+        
+        /* Individual color button styling */
+        .color-btn {
+            width: 80px;
+            height: 80px;
+            margin: 10px;
+            border-radius: 12px;
+            border: 2px solid #ffffff33; /* Semi-transparent border */
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s; /* Smooth scaling and shadow effect */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .color-btn:hover {
+            transform: scale(1.15); /* Slight scale-up on hover */
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3); /* Stronger shadow on hover */
+        }
+        
+        /* Verification button styling */
+        button.verify-btn {
+            background-color: #ff7f50; /* Coral color for the verification button */
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 30px;
+            transition: background-color 0.3s ease, transform 0.3s ease; /* Smooth transition */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+        
+        button.verify-btn:hover {
+            background-color: #ff6b3b; /* Darker coral on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+        }
+    </style>
+</head>
+<body>
+    <h3>Step 3: Select Color Pattern</h3>
+    <p>Select the colors in the correct sequence:</p>
+
+    <div id="colorOptions"></div>
+    <button class="verify-btn" onclick="verifyColorPattern()">Verify Pattern</button>
+
+    <script>
+        const correctPattern = ["Red", "Green", "Blue"]; // Expected sequence
+        let selectedPattern = [];
+        
+        // Function to shuffle colors
+        function shuffleColors(colors) {
+            for (let i = colors.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [colors[i], colors[j]] = [colors[j], colors[i]];
+            }
+            return colors;
+        }
+
+        // Function to create color buttons
+        function createColorButtons() {
+            const colorOptionsDiv = document.getElementById('colorOptions');
+            
+            // List of colors including more options
+            const colors = shuffleColors(["Red", "Green", "Blue", "Yellow", "Purple", 
+                                           "Orange", "Pink", "Cyan", "Magenta", "Lime"]);
+            
+            colors.forEach(color => {
+                const button = document.createElement('button');
+                button.className = 'color-btn';
+                button.style.backgroundColor = color.toLowerCase();
+                button.onclick = () => selectColor(color);
+                colorOptionsDiv.appendChild(button);
+            });
+        }
+
+        function selectColor(color) {
+            selectedPattern.push(color);
+            
+            // Limit selectedPattern to only the last three selections
+            if (selectedPattern.length > correctPattern.length) {
+                selectedPattern.shift(); 
+            }
+            
+            // Optional feedback for users
+            console.log("Selected Pattern:", selectedPattern); // For debugging purposes
+        }
+
+        function verifyColorPattern() {
+            // Check if the selected pattern matches the expected pattern
+            if (JSON.stringify(selectedPattern) === JSON.stringify(correctPattern)) {
+                alert("Pattern verified! Proceeding to gesture verification.");
+                window.location.href = 'gesture_verification.html'; // Redirect to next page
+            } else {
+                alert("Incorrect color pattern. Try again.");
+                selectedPattern = []; // Reset selected pattern
+                document.getElementById('colorOptions').innerHTML = ''; // Clear buttons
+                createColorButtons(); // Recreate buttons with shuffled colors
+                console.log("Resetting Selected Pattern:", selectedPattern); // For debugging purposes
+            }
+        }
+
+        // Initialize the color buttons on page load
+        createColorButtons();
+    </script>
+</body>
+</html>

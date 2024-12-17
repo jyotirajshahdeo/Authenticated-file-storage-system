@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Biometric Authentication</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styling */
+        body, html {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #0d3b66, #5c4d99);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: #ffffff;
+        }
+        
+        /* Container styling */
+        .container {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        /* Header styling */
+        h3 {
+            color: #7dd3fc;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        /* Button styling */
+        button {
+            background: linear-gradient(135deg, #0d3b66, #5c4d99);
+            color: #ffffff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 700;
+            margin: 10px 0;
+            transition: background 0.3s, transform 0.3s;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            width: 100%;
+        }
+
+        /* Button hover effect */
+        button:hover {
+            background: linear-gradient(135deg, #4c2673, #007bff);
+            transform: scale(1.05);
+        }
+
+        /* Footer styling */
+        footer {
+            font-size: 0.8em;
+            color: #cccccc;
+            opacity: 0.7;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h3>Biometric Authentication</h3>
+    <button onclick="registerBiometric()">Register Biometric</button>
+    <button onclick="authenticateBiometric()">Authenticate with Biometrics</button>
+</div>
+
+<script>
+// Function to generate a random challenge
+function generateChallenge() {
+    return new Uint8Array(32);
+}
+
+// Registration Function
+async function registerBiometric() {
+    if (!window.PublicKeyCredential) {
+        alert("WebAuthn is not supported on this browser.");
+        return;
+    }
+
+    const publicKey = {
+        challenge: generateChallenge(),
+        rp: { name: "Example Site" },
+        user: {
+            id: Uint8Array.from("user@example.com", c => c.charCodeAt(0)), // Unique user ID
+            name: "user@example.com",
+            displayName: "Example User"
+        },
+        pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+        timeout: 60000,
+        authenticatorSelection: { userVerification: "preferred" },
+    };
+
+    try {
+        const credential = await navigator.credentials.create({ publicKey });
+        console.log("Registration successful:", credential);
+        alert("Registration successful! You can now authenticate.");
+        
+        // Store the credential ID (in a real app, save this securely)
+        localStorage.setItem('credentialId', Array.from(new Uint8Array(credential.rawId)).map(b => String.fromCharCode(b)).join(''));
+    } catch (error) {
+        console.error("Registration failed:", error);
+        alert("Registration failed. Check console for details.");
+    }
+}
+
+// Authentication Function
+async function authenticateBiometric() {
+    if (!window.PublicKeyCredential) {
+        alert("WebAuthn is not supported on this browser.");
+        return;
+    }
+
+    const credentialId = localStorage.getItem('credentialId');
+    
+    if (!credentialId) {
+        alert("No registered credentials found. Please register first.");
+        return;
+    }
+
+    const publicKey = {
+        challenge: generateChallenge(),
+        allowCredentials: [{
+            id: Uint8Array.from(credentialId.split('').map(c => c.charCodeAt(0))), // Retrieve stored credential ID
+            type: "public-key",
+        }],
+        timeout: 60000,
+        userVerification: "preferred",
+    };
+
+    try {
+        const assertion = await navigator.credentials.get({ publicKey });
+        
+        console.log("Authentication successful:", assertion);
+        
+        // Redirect to the bank account dashboard after successful authentication
+        window.location.href = "upload.php"; // Ensure this points to your actual dashboard file
+        
+    } catch (error) {
+        console.error("Authentication failed:", error);
+        alert("Authentication failed. Please try again.");
+    }
+}
+</script>
+
+</body>
+</html>

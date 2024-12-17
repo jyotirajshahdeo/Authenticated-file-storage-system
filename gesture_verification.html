@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gesture Verification Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* General body styling */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298); /* Dark blue gradient */
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Header styling */
+        h3 {
+            color: #ffcc33; /* Yellow color for heading */
+            margin-bottom: 15px;
+            font-size: 2em;
+            letter-spacing: 1px;
+        }
+
+        /* Instructions styling */
+        p {
+            font-size: 1.2em;
+            color: #cce4ff; /* Light blue for instructions */
+            margin-bottom: 25px;
+        }
+
+        /* Canvas styling */
+        #gestureArea {
+            width: 300px;
+            height: 100px;
+            border: 2px solid #ffcc33; /* Yellow border for emphasis */
+            background-color: #ffffff; /* White background for contrast */
+            margin: 20px auto;
+            border-radius: 12px; /* Softer rounded corners */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25); /* Elevated shadow effect */
+            transition: transform 0.2s ease-in-out; /* Smooth zoom-in on hover */
+        }
+        #gestureArea:hover {
+            transform: scale(1.05); /* Slight scale-up on hover */
+        }
+
+        /* Button styling */
+        button {
+            background-color: #ff6b3b; /* Coral color for button */
+            color: #ffffff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 25px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Soft shadow */
+            transition: background-color 0.3s, transform 0.3s; /* Smooth color and scale transitions */
+        }
+        button:hover {
+            background-color: #ff3d1a; /* Darker coral on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+        }
+
+        /* Message box styling */
+        .message {
+            margin-top: 20px;
+            font-size: 1.1em;
+            color: #ff6666; /* Red color for error messages */
+        }
+    </style>
+</head>
+<body>
+    <h3>Gesture Verification</h3>
+    <p>Draw a straight horizontal line from left to right across the canvas.</p>
+
+    <canvas id="gestureArea" width="300" height="100"></canvas>
+    <button onclick="verifyGesture()">Verify Gesture</button>
+    <div class="message" id="message"></div> <!-- Placeholder for messages -->
+
+    <script>
+        const canvas = document.getElementById('gestureArea');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+        let startX, startY, endX, endY;
+
+        function startDrawing(event) {
+            drawing = true;
+            const rect = canvas.getBoundingClientRect();
+            startX = event.clientX - rect.left;
+            startY = event.clientY - rect.top;
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous drawings
+        }
+
+        function draw(event) {
+            if (!drawing) return;
+            const rect = canvas.getBoundingClientRect();
+            endX = event.clientX - rect.left;
+            endY = event.clientY - rect.top;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear previous drawings
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = '#007BFF';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            drawing = false;
+        }
+
+        function verifyGesture() {
+            const distanceX = Math.abs(endX - startX);
+            const distanceY = Math.abs(endY - startY);
+
+            const isHorizontal = distanceX > distanceY * 2; // Predominantly horizontal
+            const withinTolerance = endY >= 45 && endY <= 55; // Y position tolerance
+
+            const messageElement = document.getElementById('message');
+
+            if (isHorizontal && withinTolerance) {
+                messageElement.textContent = "Gesture verified! Proceeding to biometric verification.";
+                messageElement.style.color = "#00cc66"; /* Green color for success */
+                setTimeout(() => { window.location.href = 'biometric_verification.html'; }, 2000); // Redirect after delay
+            } else {
+                messageElement.textContent = "Gesture did not match. Please try again.";
+                messageElement.style.color = "#ff6666"; /* Red color for error */
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+                ctx.fillStyle = "rgba(255, 102, 102, 0.2)"; /* Light red overlay */
+                ctx.fillText("Try again!", canvas.width / 2 - 30, canvas.height / 2);
+                ctx.fillStyle = "#333333"; /* Dark text color for hints */
+                ctx.font = "16px Arial";
+                ctx.fillText("Draw a horizontal line", canvas.width / 2 - 70, canvas.height / 2 + 20);
+            }
+        }
+
+        // Event listeners for mouse events
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        // Event listeners for touch events
+        canvas.addEventListener('touchstart', (event) => {
+            startDrawing(event.touches[0]);
+        });
+        canvas.addEventListener('touchmove', (event) => {
+            event.preventDefault(); // Prevent scrolling while drawing
+            draw(event.touches[0]);
+        });
+        canvas.addEventListener('touchend', stopDrawing);
+    </script>
+</body>
+</html>
